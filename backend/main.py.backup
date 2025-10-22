@@ -1,0 +1,103 @@
+import logging
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+
+from database import engine, Base
+from routers import jobs, candidates, health
+from middleware.rate_limit import limiter, rate_limit_exceeded_handler
+
+# -----------------------------------------------------------------------------
+# ✨ SENTRY CONFIGURATION (DISABLED FOR DEV)
+# -----------------------------------------------------------------------------
+sentry_sdk.init(
+    dsn="",  # Disabled – logs only locally
+    integrations=[FastApiIntegration()],
+    traces_sample_rate=1.0,
+    profiles_sample_rate=1.0,
+    send_default_pii=True,
+    environment="development"
+)
+
+# -----------------------------------------------------------------------------
+# 🧱 DATABASE SETUP
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# 🚀 FASTAPI APPLICATION
+# -----------------------------------------------------------------------------
+app = FastAPI(
+    title="Rekruter AI API",
+    description="AI recruitment platform using Multi-Agent architecture",
+    version="1.0.0"
+)
+
+# -----------------------------------------------------------------------------
+# 🛡️ RATE LIMITER
+# -----------------------------------------------------------------------------
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
+
+# -----------------------------------------------------------------------------
+# 🧰 LOGGING
+# -----------------------------------------------------------------------------
+logger = logging.getLogger("rekruter-ai")
+
+@app.middleware("http")
+async def error_handling_middleware(request: Request, call_next):
+    """Global error handler with logging"""
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as e:
+        logger.error(f"Unhandled error: {str(e)}", exc_info=True)
+        sentry_sdk.capture_exception(e)
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": "Internal server error",
+                "detail": str(e)
+            }
+        )
+
+# -----------------------------------------------------------------------------
+# 🌍 CORS CONFIGURATION
+# -----------------------------------------------------------------------------
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
+
+# -----------------------------------------------------------------------------
+# 🔗 ROUTERS
+# -----------------------------------------------------------------------------
+app.include_router(jobs.router)
+app.include_router(candidates.router)
+app.include_router(health.router)
+
+# -----------------------------------------------------------------------------
+# 🏠 ROOT ENDPOINT
+# -----------------------------------------------------------------------------
+@app.get("/")
+async def root():
+    """Root API Endpoint"""
+    return {
+        "message": "Rekruter AI API",
+        "version": "1.0.0",
+        "status": "running"
+    }
+
+# -----------------------------------------------------------------------------
+# 💥 TEST ENDPOINT FOR ERRORS
+# -----------------------------------------------------------------------------
+@app.get("/test-error")
+async def trigger_error():
+    """Simulate intentional error to test exception tracking"""
+    raise Exception("💥 Test exception (development mode, Sentry disabled)")
+

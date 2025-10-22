@@ -1,0 +1,82 @@
+import pytest
+from fastapi.testclient import TestClient
+from main import app
+from database import get_db, Base, engine
+from models import Company, Job, Candidate
+from sqlalchemy.orm import Session
+from uuid import uuid4
+import tempfile
+from pathlib import Path
+
+client = TestClient(app)
+
+class TestCandidatesRouter:
+    """Test candidates upload and scoring"""
+    
+    @pytest.fixture
+    def test_job_id(self, db_session):
+        """Create test job and return ID"""
+        company_id = str(uuid4())
+        user_id = str(uuid4())
+        job_id = str(uuid4())
+        
+        # Create company - use STRING UUID
+        company = Company(
+            id=company_id,
+            name="Test Company",
+            user_id=user_id
+        )
+        db_session.add(company)
+        db_session.commit()
+        
+        # Create job
+        job = Job(
+            id=job_id,
+            company_id=company_id,
+            title="Python Developer",
+            description="Test job",
+            requirements={
+                "must_have": ["Python", "FastAPI"],
+                "nice_to_have": ["Docker"]
+            },
+            status="active"
+        )
+        db_session.add(job)
+        db_session.commit()
+        
+        return job_id
+    
+    @pytest.fixture
+    def db_session(self):
+        """Create test database session"""
+        session = next(get_db())
+        yield session
+        session.close()
+    
+    def test_upload_cv_invalid_job(self):
+        """Test uploading CV to non-existent job"""
+        fake_job_id = str(uuid4())
+        
+        cv_content = "Test CV"
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+            f.write(cv_content)
+            filepath = f.name
+        
+        with open(filepath, 'rb') as f:
+            response = client.post(
+                f"/api/candidates/jobs/{fake_job_id}/upload",
+                files={"file": ("test_cv.txt", f, "text/plain")}
+            )
+        
+        Path(filepath).unlink()
+        
+        # Should return 404
+        assert response.status_code == 404
+    
+    def test_list_candidates_empty(self):
+        """Test listing candidates when none exist"""
+        fake_job_id = str(uuid4())
+        response = client.get(f"/api/candidates/jobs/{fake_job_id}/candidates")
+        
+        # Should return empty list or 404
+        assert response.status_code in [200, 404]

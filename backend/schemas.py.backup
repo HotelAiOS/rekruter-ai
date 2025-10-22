@@ -1,0 +1,71 @@
+from pydantic import BaseModel, ConfigDict
+from typing import List, Optional, Any
+from datetime import datetime
+
+# Job Schemas
+class JobRequirements(BaseModel):
+    must_have: List[str]
+    nice_to_have: List[str]
+
+class JobCreate(BaseModel):
+    title: str
+    description: str
+    requirements: JobRequirements
+
+class JobResponse(BaseModel):
+    id: str
+    company_id: str
+    title: str
+    description: str
+    requirements: JobRequirements
+    status: str
+    created_at: datetime
+    
+    # ✅ ZMIANA: class Config → model_config
+    model_config = ConfigDict(from_attributes=True)
+
+# Candidate Schemas
+class CandidateExperience(BaseModel):
+    company: Optional[str] = None
+    position: Optional[str] = None
+    period: Optional[str] = None
+    description: Optional[str] = None
+
+class CandidateEducation(BaseModel):
+    degree: Optional[str] = None
+    field: Optional[str] = None
+    university: Optional[str] = None
+    year: Optional[str] = None
+
+class CandidateLanguage(BaseModel):
+    language: Optional[str] = None
+    level: Optional[str] = None
+
+class ParsedCVData(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    experience: Optional[Any] = None
+    skills: Optional[List[str]] = []
+    education: Optional[Any] = None
+    languages: Optional[Any] = None
+
+class CandidateAnalysis(BaseModel):
+    score: int
+    strengths: List[str]
+    weaknesses: List[str]
+    recommendation: str
+    reasoning: Any  # Changed to Any - can be string or list
+
+class CandidateResponse(BaseModel):
+    id: str
+    job_id: str
+    file_path: Optional[str] = None
+    parsed_data: Optional[ParsedCVData] = None
+    score: Optional[int] = None
+    analysis: Optional[CandidateAnalysis] = None
+    status: str
+    created_at: datetime
+    
+    # ✅ ZMIANA: class Config → model_config
+    model_config = ConfigDict(from_attributes=True)

@@ -1,0 +1,8 @@
+{
+  "title": "Senior Python Developer",
+  "description": "Looking for experienced Python developer",
+  "requirements": {
+    "must_have": ["Python", "FastAPI", "PostgreSQL"],
+    "nice_to_have": ["Docker", "AWS"]
+  }
+}

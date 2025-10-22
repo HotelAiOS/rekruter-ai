@@ -1,0 +1,135 @@
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Request
+from sqlalchemy.orm import Session
+from typing import List
+from pathlib import Path
+from database import get_db
+from models import Candidate, Job
+from schemas import CandidateResponse
+from services.pdf_parser import PDFParserService
+from services.llm_service import LLMService
+from services.agents import AgentOrchestrator
+from config import settings
+from uuid import uuid4
+from middleware.rate_limit import limiter  # ✅
+
+router = APIRouter(prefix="/api/candidates", tags=["candidates"])
+UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+@router.post("/jobs/{job_id}/upload", response_model=CandidateResponse)
+@limiter.limit("10/minute")  # ✅ limit aktywny
+async def upload_cv(
+    request: Request,  # ✅ wymagane przez SlowAPI
+    job_id: str,
+    file: UploadFile,
+    db: Session = Depends(get_db)
+):
+    """Upload CV with Multi-Agent processing"""
+    
+    # 1️⃣ Walidacja joba
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    # 2️⃣ Walidacja pliku
+    file_extension = Path(file.filename).suffix.lower()
+    if file_extension not in [".pdf", ".doc", ".docx", ".txt"]:
+        raise HTTPException(status_code=400, detail="Invalid file type")
+    
+    # 3️⃣ Zapis pliku
+    upload_dir = Path("uploads")
+    upload_dir.mkdir(exist_ok=True)
+    safe_filename = f"{job_id}_{file.filename}"
+    file_path = upload_dir / safe_filename
+    with open(file_path, "wb") as f:
+        content = await file.read()
+        f.write(content)
+    
+    # 4️⃣ Ekstrakcja CV
+    parser = PDFParserService()
+    cv_text = parser.extract_text(str(file_path)) or "Could not extract text from file"
+    
+    # 5️⃣ LLM initialization
+    llm_service = LLMService()
+    parsed_cv = await llm_service.parse_cv(cv_text)
+    print(f"✅ DEBUG PARSE_CV SUCCESS: {parsed_cv.get('name', 'Unknown')}")
+
+    # 6️⃣ Multi-Agent
+    if settings.USE_MULTI_AGENT:
+        try:
+            orchestrator = AgentOrchestrator()
+            print("🤖 Using Multi-Agent System...")
+
+            multi_agent_result = await orchestrator.process_candidate(
+                cv_data=parsed_cv,
+                job_requirements=job.requirements,
+                company_id=str(job.company_id)
+            )
+
+            score = multi_agent_result.get('score', 0)
+            analysis = {
+                "score": score,
+                "recommendation": multi_agent_result.get('recommendation', 'unknown'),
+                "confidence": multi_agent_result.get('confidence', 'medium'),
+                "strengths": multi_agent_result.get('strengths', []),
+                "weaknesses": multi_agent_result.get('weaknesses', []),
+                "reasoning": multi_agent_result.get('reasoning', '')
+            }
+
+            print(f"✅ Multi-Agent Score: {score}/100, Recommendation: {analysis['recommendation']}")
+            
+            # Kaizen
+            if settings.USE_KAIZEN_LEARNING:
+                orchestrator.log_decision_to_kaizen(str(uuid4()), multi_agent_result)
+
+        except Exception as e:
+            print(f"❌ Multi-Agent Error: {e}")
+            if settings.ENABLE_FALLBACK:
+                print("⚠️ Falling back to simple scoring...")
+                score_result = await llm_service.score_candidate(parsed_cv, job.requirements)
+                score = score_result.get('score', 0)
+                analysis = score_result
+                print(f"✅ DEBUG SCORE SUCCESS: score={score}")
+            else:
+                raise HTTPException(status_code=500, detail="Multi-Agent processing failed")
+
+    else:
+        # Fallback MVP
+        print("📊 Using Simple Scoring...")
+        score_result = await llm_service.score_candidate(parsed_cv, job.requirements)
+        score = score_result.get('score', 0)
+        analysis = score_result
+        print(f"✅ Simple Score: {score}/100")
+    
+    # 7️⃣ Zapis wyników
+    candidate = Candidate(
+        id=str(uuid4()),
+        job_id=job_id,
+        file_path=str(file_path),
+        parsed_data=parsed_cv,
+        score=score,
+        analysis=analysis,
+        status="new"
+    )
+    db.add(candidate)
+    db.commit()
+    db.refresh(candidate)
+    return candidate
+
+
+@router.get("/jobs/{job_id}/candidates", response_model=List[CandidateResponse])
+@limiter.limit("30/minute")
+async def list_candidates(request: Request, job_id: str, db: Session = Depends(get_db)):
+    """List candidates for a specific job"""
+    return db.query(Candidate).filter(Candidate.job_id == job_id)\
+        .order_by(Candidate.score.desc()).all()
+
+
+@router.get("/{candidate_id}", response_model=CandidateResponse)
+@limiter.limit("60/minute")
+async def get_candidate(request: Request, candidate_id: str, db: Session = Depends(get_db)):
+    """Get candidate details"""
+    candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
+    if not candidate:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Candidate not found")
+    return candidate

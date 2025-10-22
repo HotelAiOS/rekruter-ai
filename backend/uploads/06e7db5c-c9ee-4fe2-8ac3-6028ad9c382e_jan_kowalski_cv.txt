@@ -1,0 +1,23 @@
+Jan Kowalski
+Email: jan.kowalski@example.com
+Phone: +48 123 456 789
+
+EXPERIENCE:
+- Senior Python Developer at TechCorp (2020-2023)
+  - Built REST APIs with FastAPI and PostgreSQL
+  - Deployed microservices to AWS using Docker
+  - Led team of 3 developers
+
+- Python Developer at StartupX (2018-2020)
+  - Developed Django applications
+  - Worked with PostgreSQL databases
+
+SKILLS:
+Python, FastAPI, PostgreSQL, Docker, AWS, Django, REST APIs, Git
+
+EDUCATION:
+MSc Computer Science, Warsaw University (2018)
+
+LANGUAGES:
+English: Fluent
+Polish: Native
