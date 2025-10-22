@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 import httpx
 from typing import Dict, Any, Optional
 from config import settings
@@ -26,7 +30,7 @@ class LLMService:
                 response.raise_for_status()
                 return response.json().get("response", "")
         except Exception as e:
-            print(f"❌ Ollama Error: {e}")
+            logger.info(f"❌ Ollama Error: {e}")
             return ""
     
     def extract_json(self, text: str) -> Any:
@@ -61,11 +65,11 @@ class LLMService:
         
         try:
             parsed = self.extract_json(response)
-            print(f"✅ DEBUG PARSE_CV SUCCESS: {parsed.get('name', 'N/A')}")
+            logger.info(f"✅ DEBUG PARSE_CV SUCCESS: {parsed.get('name', 'N/A')}")
             return parsed if isinstance(parsed, dict) else {}
         except Exception as e:
-            print(f"❌ DEBUG PARSE_CV ERROR: {e}")
-            print(f"📄 DEBUG PARSE_CV RAW (first 300): {str(response)[:300]}")
+            logger.info(f"❌ DEBUG PARSE_CV ERROR: {e}")
+            logger.info(f"📄 DEBUG PARSE_CV RAW (first 300): {str(response)[:300]}")
             return {}
     
     async def score_candidate(self, cv_data: Dict[str, Any], job_requirements: Dict[str, Any]) -> Dict[str, Any]:
@@ -84,9 +88,9 @@ Return ONLY JSON with score, strengths, weaknesses, recommendation, reasoning"""
         
         try:
             scored = self.extract_json(response)
-            print(f"✅ DEBUG SCORE SUCCESS: score={scored.get('score')}")
+            logger.info(f"✅ DEBUG SCORE SUCCESS: score={scored.get('score')}")
             return scored if isinstance(scored, dict) else {"score": 0, "strengths": [], "weaknesses": ["Error"], "recommendation": "no", "reasoning": "Failed"}
         except Exception as e:
-            print(f"❌ DEBUG SCORE ERROR: {e}")
-            print(f"📄 DEBUG SCORE RAW (first 300): {str(response)[:300]}")
+            logger.info(f"❌ DEBUG SCORE ERROR: {e}")
+            logger.info(f"📄 DEBUG SCORE RAW (first 300): {str(response)[:300]}")
             return {"score": 0, "strengths": [], "weaknesses": ["Error"], "recommendation": "no", "reasoning": "Failed"}

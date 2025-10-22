@@ -34,3 +34,22 @@ async def test_list_jobs_endpoint_exists(client: AsyncClient):
     response = await client.get("/api/jobs")
     # Może być 200, 404, 500
     assert response.status_code in [200, 404, 500]
+
+@pytest.mark.asyncio
+async def test_create_job_with_auth(client: AsyncClient):
+    # Login first
+    login_resp = await client.post("/auth/login", data={
+        "username": "user@app.io",
+        "password": "test"
+    })
+    token = login_resp.json()["access_token"]
+    
+    # Create job with auth
+    response = await client.post("/api/jobs", 
+        headers={"Authorization": f"Bearer {token}"},
+        json={
+            "title": "Test Job",
+            "description": "Test",
+            "requirements": {"must_have": ["Python"], "nice_to_have": []}
+        })
+    assert response.status_code == 201

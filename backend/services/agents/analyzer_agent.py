@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 from typing import Dict, Any, Optional
 from .base_agent import BaseAgent
 from services.llm_service import LLMService
@@ -67,7 +71,7 @@ Be thorough but concise.
             return result
             
         except Exception as e:
-            print(f"❌ AnalyzerAgent Error: {e}")
+            logger.info(f"❌ AnalyzerAgent Error: {e}")
             return {
                 "strengths": [],
                 "weaknesses": ["Analysis failed"],

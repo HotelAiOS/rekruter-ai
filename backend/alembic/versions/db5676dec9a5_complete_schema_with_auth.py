@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 """Complete schema with auth
 
 Revision ID: db5676dec9a5

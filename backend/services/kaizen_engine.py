@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 from database import get_db
@@ -9,7 +13,7 @@ class KaizenEngine:
     
     def __init__(self):
         self.learning_data = []
-        print("🎓 Kaizen Learning Engine initialized")
+        logger.info("🎓 Kaizen Learning Engine initialized")
     
     def log_decision(self, candidate_id: str, decision: str, reasoning: str):
         """Log a hiring decision"""
@@ -20,7 +24,7 @@ class KaizenEngine:
             "timestamp": datetime.now()
         }
         self.learning_data.append(entry)
-        print(f"📝 Logged decision: {decision} for candidate {candidate_id}")
+        logger.info(f"📝 Logged decision: {decision} for candidate {candidate_id}")
     
     async def collect_feedback(self, candidate_id: str, feedback: Dict):
         """Collect feedback on hired candidate after 1-6 months"""
@@ -36,7 +40,7 @@ class KaizenEngine:
         # Trigger learning
         await self.learn_from_feedback(candidate_id, feedback_entry)
         
-        print(f"✅ Feedback collected for {candidate_id}")
+        logger.info(f"✅ Feedback collected for {candidate_id}")
         return feedback_entry
     
     async def learn_from_feedback(self, candidate_id: str, feedback: Dict):
@@ -46,7 +50,7 @@ class KaizenEngine:
         candidate = db.query(Candidate).filter(Candidate.id == candidate_id).first()
         
         if not candidate:
-            print(f"⚠️ Candidate {candidate_id} not found")
+            logger.info(f"⚠️ Candidate {candidate_id} not found")
             return
         
         predicted_score = candidate.score
@@ -56,13 +60,13 @@ class KaizenEngine:
         error = abs(predicted_score - actual_performance)
         
         if error > 20:
-            print(f"⚠️ Large prediction error: {error} points!")
-            print(f"   Predicted: {predicted_score}, Actual: {actual_performance}")
+            logger.info(f"⚠️ Large prediction error: {error} points!")
+            logger.info(f"   Predicted: {predicted_score}, Actual: {actual_performance}")
             
             # Log for review
             self.log_misprediction(candidate, feedback, error)
         else:
-            print(f"✅ Good prediction! Error: {error} points")
+            logger.info(f"✅ Good prediction! Error: {error} points")
     
     def log_misprediction(self, candidate, feedback, error):
         """Log cases where we were significantly wrong"""
@@ -78,7 +82,7 @@ class KaizenEngine:
         }
         
         # In future: use this to retrain models
-        print(f"📊 Misprediction logged for analysis")
+        logger.info(f"📊 Misprediction logged for analysis")
     
     def get_learning_stats(self) -> Dict:
         """Get learning statistics"""

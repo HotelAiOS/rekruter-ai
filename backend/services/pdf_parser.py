@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 import fitz
 from pathlib import Path
 from typing import Optional
@@ -22,11 +26,11 @@ class PDFParserService:
             if not text.strip():
                 raise Exception("PDF is empty")
             
-            print(f"✅ PDF parsed: {len(text)} characters from {len(doc)} pages")
+            logger.info(f"✅ PDF parsed: {len(text)} characters from {len(doc)} pages")
             return text.strip()
         
         except Exception as e:
-            print(f"⚠️ PDF Parse Error: {e} - trying TXT fallback...")
+            logger.info(f"⚠️ PDF Parse Error: {e} - trying TXT fallback...")
             # Fallback: read as plain text
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
@@ -35,10 +39,10 @@ class PDFParserService:
                 if not text:
                     return None
                     
-                print(f"✅ TXT fallback SUCCESS: {len(text)} characters")
+                logger.info(f"✅ TXT fallback SUCCESS: {len(text)} characters")
                 return text
             except Exception as txt_err:
-                print(f"❌ TXT Fallback FAILED: {txt_err}")
+                logger.info(f"❌ TXT Fallback FAILED: {txt_err}")
                 return None
     
     @staticmethod
@@ -57,11 +61,11 @@ class PDFParserService:
             if not result.strip():
                 return None
             
-            print(f"✅ DOCX parsed: {len(result)} characters, {len(doc.paragraphs)} paragraphs")
+            logger.info(f"✅ DOCX parsed: {len(result)} characters, {len(doc.paragraphs)} paragraphs")
             return result.strip()
         
         except Exception as e:
-            print(f"❌ DOCX Parse Error: {e}")
+            logger.info(f"❌ DOCX Parse Error: {e}")
             return None
     
     @staticmethod
@@ -76,12 +80,12 @@ class PDFParserService:
             return PDFParserService.extract_text_from_docx(file_path)
         else:
             # Fallback dla innych - czytaj jako TXT
-            print(f"⚠️ Unknown extension {ext}, trying TXT...")
+            logger.info(f"⚠️ Unknown extension {ext}, trying TXT...")
             try:
                 with open(file_path, 'r', encoding='utf-8') as f:
                     text = f.read().strip()
-                print(f"✅ TXT read: {len(text)} chars")
+                logger.info(f"✅ TXT read: {len(text)} chars")
                 return text if text else None
             except Exception as e:
-                print(f"❌ TXT read failed: {e}")
+                logger.info(f"❌ TXT read failed: {e}")
                 return None

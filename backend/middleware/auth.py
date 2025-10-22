@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 from fastapi import Depends, HTTPException, status
 from services.auth import get_current_active_user
 from models import User

@@ -1,9 +1,16 @@
-# REKRUTER AI Backend
+# Rekruter AI Backend
+AI-powered recruitment platform with multi-agent system
+
+## Features
+- REST API (16 endpoints)
+- JWT Authentication
+- Multi-agent AI
+- CV parsing & scoring
+- Docker ready
 
 ## Quick Start
 ```bash
-docker-compose up
+docker-compose up --build
 ```
 
-## API Docs
-http://localhost:8000/docs
+Backend: http://localhost:8000/docs

@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 import pytest
 import asyncio
 from httpx import AsyncClient, ASGITransport

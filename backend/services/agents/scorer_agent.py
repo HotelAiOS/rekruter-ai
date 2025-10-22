@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 from typing import Dict, Any
 from .base_agent import BaseAgent
 from services.llm_service import LLMService

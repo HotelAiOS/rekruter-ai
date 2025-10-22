@@ -1,0 +1,192 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.7, pytest-8.4.2, pluggy-1.6.0 -- /home/ianua/projects/rekruter-ai/backend/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/ianua/projects/rekruter-ai/backend
+configfile: pytest.ini
+plugins: anyio-4.11.0, cov-7.0.0, asyncio-1.2.0, Faker-37.11.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 41 items
+
+tests/test_agents.py::test_screener_agent_initialization PASSED          [  2%]
+tests/test_agents.py::test_analyzer_agent_initialization PASSED          [  4%]
+tests/test_agents.py::test_scorer_agent_initialization PASSED            [  7%]
+tests/test_agents.py::test_screener_agent_mock_processing PASSED         [  9%]
+tests/test_agents.py::test_analyzer_agent_mock_processing PASSED         [ 12%]
+tests/test_api.py::test_health_check PASSED                              [ 14%]
+tests/test_api.py::test_root_endpoint PASSED                             [ 17%]
+tests/test_api.py::test_metrics_endpoint PASSED                          [ 19%]
+tests/test_api.py::test_create_job_endpoint_exists FAILED                [ 21%]
+tests/test_api.py::test_list_jobs_endpoint_exists FAILED                 [ 24%]
+tests/test_cache.py::test_cache_initialization PASSED                    [ 26%]
+tests/test_cache.py::test_cache_set_get PASSED                           [ 29%]
+tests/test_cache.py::test_cache_delete PASSED                            [ 31%]
+tests/test_candidates.py::TestCandidatesRouter::test_upload_cv_endpoint_exists PASSED [ 34%]
+tests/test_candidates.py::TestCandidatesRouter::test_list_candidates_endpoint PASSED [ 36%]
+tests/test_candidates.py::TestCandidatesRouter::test_upload_invalid_file_type PASSED [ 39%]
+tests/test_config.py::test_settings_singleton PASSED                     [ 41%]
+tests/test_config.py::test_environment_properties PASSED                 [ 43%]
+tests/test_config.py::test_redis_available_property PASSED               [ 46%]
+tests/test_config.py::test_default_values PASSED                         [ 48%]
+tests/test_config.py::test_feature_flags PASSED                          [ 51%]
+tests/test_database.py::test_check_db_connection PASSED                  [ 53%]
+tests/test_database.py::test_get_db_session PASSED                       [ 56%]
+tests/test_database.py::test_database_url_configured PASSED              [ 58%]
+tests/test_database.py::test_is_sqlite_property PASSED                   [ 60%]
+tests/test_health.py::test_health_endpoint PASSED                        [ 63%]
+tests/test_health.py::test_root_endpoint PASSED                          [ 65%]
+tests/test_integration.py::test_full_job_flow PASSED                     [ 68%]
+tests/test_llm_service.py::TestLLMService::test_extract_json_from_dict PASSED [ 70%]
+tests/test_llm_service.py::TestLLMService::test_extract_json_from_string PASSED [ 73%]
+tests/test_llm_service.py::TestLLMService::test_extract_json_from_markdown PASSED [ 75%]
+tests/test_llm_service.py::TestLLMService::test_extract_json_invalid PASSED [ 78%]
+tests/test_llm_service.py::TestLLMService::test_parse_cv_empty PASSED    [ 80%]
+tests/test_llm_service.py::TestLLMService::test_score_candidate_basic PASSED [ 82%]
+tests/test_middleware.py::test_request_id_header PASSED                  [ 85%]
+tests/test_middleware.py::test_security_headers PASSED                   [ 87%]
+tests/test_middleware.py::test_cors_headers PASSED                       [ 90%]
+tests/test_pdf_parser.py::TestPDFParser::test_extract_text_from_txt_file PASSED [ 92%]
+tests/test_pdf_parser.py::TestPDFParser::test_extract_text_unsupported_format PASSED [ 95%]
+tests/test_pdf_parser.py::TestPDFParser::test_extract_text_empty_file PASSED [ 97%]
+tests/test_pdf_parser.py::TestPDFParser::test_extract_text_nonexistent_file PASSED [100%]
+
+=================================== FAILURES ===================================
+_______________________ test_create_job_endpoint_exists ________________________
+
+client = <httpx.AsyncClient object at 0x7f93fa22e9e0>
+
+    @pytest.mark.asyncio
+    async def test_create_job_endpoint_exists(client: AsyncClient):
+        response = await client.post("/api/jobs", json={
+            "title": "Test Job",
+            "description": "Test description",
+            "requirements": {"must_have": ["Python"], "nice_to_have": []}
+        })
+        # Może być 201, 422, 500 (DB issue), 404 (routing)
+>       assert response.status_code in [201, 404, 422, 500]
+E       assert 401 in [201, 404, 422, 500]
+E        +  where 401 = <Response [401 Unauthorized]>.status_code
+
+tests/test_api.py:30: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-22 10:11:13,195 - httpx - INFO - HTTP Request: POST http://test/api/jobs "HTTP/1.1 401 Unauthorized"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1740 HTTP Request: POST http://test/api/jobs "HTTP/1.1 401 Unauthorized"
+________________________ test_list_jobs_endpoint_exists ________________________
+
+client = <httpx.AsyncClient object at 0x7f93fa2a9940>
+
+    @pytest.mark.asyncio
+    async def test_list_jobs_endpoint_exists(client: AsyncClient):
+        response = await client.get("/api/jobs")
+        # Może być 200, 404, 500
+>       assert response.status_code in [200, 404, 500]
+E       assert 401 in [200, 404, 500]
+E        +  where 401 = <Response [401 Unauthorized]>.status_code
+
+tests/test_api.py:36: AssertionError
+----------------------------- Captured stderr call -----------------------------
+2025-10-22 10:11:13,309 - httpx - INFO - HTTP Request: GET http://test/api/jobs "HTTP/1.1 401 Unauthorized"
+------------------------------ Captured log call -------------------------------
+INFO     httpx:_client.py:1740 HTTP Request: GET http://test/api/jobs "HTTP/1.1 401 Unauthorized"
+=============================== warnings summary ===============================
+schemas.py:19
+  /home/ianua/projects/rekruter-ai/backend/schemas.py:19: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class JobResponse(BaseModel):
+
+schemas.py:36
+  /home/ianua/projects/rekruter-ai/backend/schemas.py:36: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class JobStats(BaseModel):
+
+schemas.py:46
+  /home/ianua/projects/rekruter-ai/backend/schemas.py:46: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CandidateResponse(BaseModel):
+
+schemas.py:57
+  /home/ianua/projects/rekruter-ai/backend/schemas.py:57: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CandidateUpdate(BaseModel):
+
+schemas.py:71
+  /home/ianua/projects/rekruter-ai/backend/schemas.py:71: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UserResponse(BaseModel):
+
+<frozen importlib._bootstrap>:488
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyPacked has no __module__ attribute
+
+<frozen importlib._bootstrap>:488
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type SwigPyObject has no __module__ attribute
+
+<frozen importlib._bootstrap>:488
+  <frozen importlib._bootstrap>:488: DeprecationWarning: builtin type swigvarlink has no __module__ attribute
+
+tests/test_integration.py::test_full_job_flow
+  /home/ianua/projects/rekruter-ai/backend/services/auth.py:31: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    expire = datetime.utcnow() + expires_delta
+
+tests/test_integration.py::test_full_job_flow
+  /home/ianua/projects/rekruter-ai/backend/routers/jobs.py:33: PydanticDeprecatedSince20: The `dict` method is deprecated; use `model_dump` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    requirements=job_data.requirements.dict() if hasattr(job_data.requirements, 'dict') else job_data.requirements
+
+tests/test_integration.py::test_full_job_flow
+  /home/ianua/projects/rekruter-ai/backend/venv/lib/python3.13/site-packages/sqlalchemy/sql/schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform linux, python 3.13.7-final-0 ________________
+
+Name                                Stmts   Miss  Cover   Missing
+-----------------------------------------------------------------
+config.py                              48      0   100%
+database.py                            31      8    74%   44-45, 55-57, 69-71
+fix_logging.py                         21     21     0%   1-28
+main.py                                52     10    81%   23-29, 33-38, 84-85
+middleware/__init__.py                  2      0   100%
+middleware/auth.py                     11      3    73%   13-15
+middleware/rate_limit.py               10     10     0%   1-16
+middleware/security.py                 20      0   100%
+models.py                              49      0   100%
+routers/__init__.py                     2      0   100%
+routers/auth.py                        53     29    45%   25-64, 74-96, 106, 113-119
+routers/candidates.py                 101     66    35%   30-95, 110, 113, 118-120, 128-134, 143-156, 164-173, 182-204
+routers/health.py                      36     36     0%   1-62
+routers/jobs.py                        79     53    33%   24-42, 53-58, 67-71, 81-94, 103-109, 118-141
+schemas.py                             70      0   100%
+seed_company_knowledge.py              25     25     0%   1-79
+services/__init__.py                    2      0   100%
+services/agents/__init__.py             8      0   100%
+services/agents/analyzer_agent.py      24     14    42%   26-75
+services/agents/base_agent.py          14      2    86%   20, 24
+services/agents/orchestrator.py        51     40    22%   15-25, 35-77, 81-91
+services/agents/scorer_agent.py        38     28    26%   33-72
+services/agents/screener_agent.py      15      7    53%   20-29
+services/auth.py                       61     15    75%   25, 33, 43-45, 65, 67-68, 71-79, 83
+services/cache.py                      47     47     0%   1-59
+services/cache/__init__.py              4      0   100%
+services/cache/cache_service.py        50     24    52%   18-29, 33-37, 43-47, 52-55, 59-60
+services/kaizen_engine.py              49     49     0%   1-108
+services/llm_service.py                64     10    84%   32-34, 48-49, 69, 93-96
+services/logger.py                     11     11     0%   1-13
+services/pdf_parser.py                 65     32    51%   18-30, 37-43, 51-69, 80, 89-91
+services/rag_service.py                64     64     0%   1-117
+tests/__init__.py                       2      0   100%
+tests/conftest.py                      19      3    84%   12-14
+tests/test_agents.py                   26      0   100%
+tests/test_api.py                      25      0   100%
+tests/test_cache.py                    24      0   100%
+tests/test_candidates.py               29      0   100%
+tests/test_config.py                   27      4    85%   15-17, 22
+tests/test_database.py                 20      1    95%   29
+tests/test_health.py                   17      0   100%
+tests/test_integration.py              12      0   100%
+tests/test_llm_service.py              36      0   100%
+tests/test_middleware.py               17      0   100%
+tests/test_pdf_parser.py               30      0   100%
+-----------------------------------------------------------------
+TOTAL                                1461    612    58%
+Coverage HTML written to dir htmlcov
+=========================== short test summary info ============================
+FAILED tests/test_api.py::test_create_job_endpoint_exists - assert 401 in [20...
+FAILED tests/test_api.py::test_list_jobs_endpoint_exists - assert 401 in [200...
+================== 2 failed, 39 passed, 13 warnings in 53.56s ==================

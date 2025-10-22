@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 from .base_agent import BaseAgent
 from .screener_agent import ScreenerAgent
 from .analyzer_agent import AnalyzerAgent

@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 from sqlalchemy import Column, String, DateTime, Boolean, ForeignKey, Text, JSON, Integer
 from sqlalchemy.orm import relationship
 from database import Base

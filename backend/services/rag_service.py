@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 from sentence_transformers import SentenceTransformer
 import faiss
 import numpy as np
@@ -11,7 +15,7 @@ class CompanyKnowledgeRAG:
     """RAG system for company-specific knowledge"""
     
     def __init__(self):
-        print("🔧 Initializing RAG system...")
+        logger.info("🔧 Initializing RAG system...")
         # Load embedding model
         self.encoder = SentenceTransformer('all-MiniLM-L6-v2')
         self.dimension = 384  # Model dimension
@@ -24,11 +28,11 @@ class CompanyKnowledgeRAG:
             self.index = faiss.read_index(str(self.index_path))
             with open(self.docs_path, 'rb') as f:
                 self.documents = pickle.load(f)
-            print(f"✅ Loaded {len(self.documents)} documents from cache")
+            logger.info(f"✅ Loaded {len(self.documents)} documents from cache")
         else:
             self.index = faiss.IndexFlatL2(self.dimension)
             self.documents = []
-            print("✅ Created new RAG index")
+            logger.info("✅ Created new RAG index")
     
     def add_document(self, doc_id: str, text: str, metadata: Dict):
         """Add document to knowledge base"""
@@ -46,7 +50,7 @@ class CompanyKnowledgeRAG:
             "embedding": embedding
         })
         
-        print(f"✅ Added document: {doc_id}")
+        logger.info(f"✅ Added document: {doc_id}")
     
     def search(self, query: str, top_k: int = 3, company_id: Optional[str] = None) -> List[Dict]:
         """Search for relevant documents"""
@@ -100,7 +104,7 @@ class CompanyKnowledgeRAG:
         with open(self.docs_path, 'wb') as f:
             pickle.dump(self.documents, f)
         
-        print(f"✅ Saved {len(self.documents)} documents to {self.index_path}")
+        logger.info(f"✅ Saved {len(self.documents)} documents to {self.index_path}")
 
 # Global instance (lazy load when RAG is enabled)
 _rag_instance = None

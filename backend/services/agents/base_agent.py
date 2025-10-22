@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 from abc import ABC
 from typing import Any, Dict
 from datetime import datetime

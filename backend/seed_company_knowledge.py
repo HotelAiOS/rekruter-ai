@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 """Seed company knowledge base with example data"""
 from services.rag_service import get_rag
 from config import settings
@@ -11,7 +15,7 @@ def seed_knowledge():
     rag = get_rag()
     
     if not rag:
-        print("❌ RAG not initialized")
+        logger.info("❌ RAG not initialized")
         return
     
     # Example documents
@@ -61,15 +65,15 @@ def seed_knowledge():
     # Save to disk
     rag.save()
     
-    print(f"\n✅ Seeded {len(documents)} documents to knowledge base")
+    logger.info(f"\n✅ Seeded {len(documents)} documents to knowledge base")
     
     # Test search
-    print("\n🔍 Testing RAG search...")
+    logger.info("\n🔍 Testing RAG search...")
     results = rag.search("What do we look for in candidates?", top_k=2)
     for i, result in enumerate(results, 1):
-        print(f"\n{i}. {result['metadata']['title']}")
-        print(f"   Score: {result['score']:.2f}")
-        print(f"   Preview: {result['text'][:100]}...")
+        logger.info(f"\n{i}. {result['metadata']['title']}")
+        logger.info(f"   Score: {result['score']:.2f}")
+        logger.info(f"   Preview: {result['text'][:100]}...")
 
 if __name__ == "__main__":
     seed_knowledge()
